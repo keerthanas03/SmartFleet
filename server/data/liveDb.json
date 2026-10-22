@@ -1,0 +1,518 @@
+{
+  "users": [
+    {
+      "_id": "admin-seed-id",
+      "name": "Fleet Administrator",
+      "email": "admin@smartfleet.com",
+      "password": "Admin@123456",
+      "phone": "+919876543210",
+      "role": "admin",
+      "verificationStatus": "approved",
+      "isDemo": true,
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "_id": "demo-driver-id",
+      "name": "Demo Test Driver",
+      "email": "customer@smartfleet.com",
+      "password": "Customer@123456",
+      "phone": "+919876543211",
+      "role": "customer",
+      "verificationStatus": "approved",
+      "isDemo": true,
+      "createdAt": "2026-02-15T00:00:00.000Z"
+    }
+  ],
+  "bookings": [
+    {
+      "_id": "bk-demo-100",
+      "bookingReference": "SF-2026-9040",
+      "customer": "demo-driver-id",
+      "customerEmail": "customer@smartfleet.com",
+      "customerName": "Demo Test Driver",
+      "customerPhone": "+919876543211",
+      "vehicle": {
+        "_id": "demo-bmw-330i",
+        "brand": "BMW",
+        "model": "3 Series Gran Limousine M-Sport",
+        "year": 2024,
+        "category": "Luxury",
+        "registrationNumber": "KA01ML3301",
+        "fuelType": "Petrol",
+        "transmission": "Automatic",
+        "seatingCapacity": 5,
+        "pricePerDay": 6800,
+        "location": "Bengaluru Airport Terminal 1",
+        "images": [
+          "/images/bmw-3series.jpg"
+        ],
+        "features": [
+          "Harman Kardon Audio",
+          "Panoramic Sunroof",
+          "Twin-Turbo 258 BHP",
+          "Wireless Apple CarPlay",
+          "Heated Sport Seats"
+        ],
+        "status": "AVAILABLE",
+        "mileage": 8200
+      },
+      "pickupDate": "2026-10-16T03:28:07.159Z",
+      "returnDate": "2026-10-19T03:28:07.159Z",
+      "numberOfDays": 3,
+      "baseAmount": 20400,
+      "taxAmount": 3672,
+      "insuranceAmount": 1050,
+      "totalAmount": 25122,
+      "status": "PENDING",
+      "paymentStatus": "PENDING",
+      "pickupLocation": "Bengaluru Airport Terminal 1",
+      "returnLocation": "Bengaluru Airport Terminal 1",
+      "isDemo": true,
+      "createdAt": "2026-10-14T00:00:00.000Z"
+    },
+    {
+      "_id": "bk-demo-101",
+      "bookingReference": "SF-2026-9041",
+      "customer": "demo-driver-id",
+      "customerEmail": "customer@smartfleet.com",
+      "customerName": "Demo Test Driver",
+      "customerPhone": "+919876543211",
+      "vehicle": {
+        "_id": "demo-innova-crysta",
+        "brand": "Toyota",
+        "model": "Innova Crysta 2.4 VX Executive",
+        "year": 2024,
+        "category": "SUV",
+        "registrationNumber": "MH02EK4021",
+        "fuelType": "Diesel",
+        "transmission": "Automatic",
+        "seatingCapacity": 7,
+        "pricePerDay": 4800,
+        "location": "Mumbai Airport Terminal 2",
+        "images": [
+          "/images/innova-crysta.jpg"
+        ],
+        "features": [
+          "Captain Executive Seats",
+          "Automatic Climate Control",
+          "Ultra-Reliable D-4D Engine",
+          "Rear Entertainment Screen",
+          "Ambient Lighting"
+        ],
+        "status": "AVAILABLE",
+        "mileage": 18500
+      },
+      "pickupDate": "2026-10-01T00:00:00.000Z",
+      "returnDate": "2026-10-04T00:00:00.000Z",
+      "numberOfDays": 3,
+      "baseAmount": 14400,
+      "taxAmount": 2592,
+      "insuranceAmount": 1050,
+      "totalAmount": 18042,
+      "status": "COMPLETED",
+      "paymentStatus": "PAID",
+      "pickupLocation": "Mumbai Airport Terminal 2",
+      "returnLocation": "Mumbai Airport Terminal 2",
+      "isDemo": true,
+      "createdAt": "2026-10-01T00:00:00.000Z"
+    }
+  ],
+  "maintenances": [
+    {
+      "_id": "maint-101",
+      "vehicle": {
+        "_id": "demo-bmw-330i",
+        "brand": "BMW",
+        "model": "3 Series Gran Limousine M-Sport",
+        "year": 2024,
+        "category": "Luxury",
+        "registrationNumber": "KA01ML3301",
+        "fuelType": "Petrol",
+        "transmission": "Automatic",
+        "seatingCapacity": 5,
+        "pricePerDay": 6800,
+        "location": "Bengaluru Airport Terminal 1",
+        "images": [
+          "/images/bmw-3series.jpg"
+        ],
+        "features": [
+          "Harman Kardon Audio",
+          "Panoramic Sunroof",
+          "Twin-Turbo 258 BHP",
+          "Wireless Apple CarPlay",
+          "Heated Sport Seats"
+        ],
+        "status": "AVAILABLE",
+        "mileage": 8200
+      },
+      "serviceDate": "2026-09-15T00:00:00.000Z",
+      "mileage": 8200,
+      "serviceType": "Routine Oil & Synthetic Filter Service",
+      "description": "Scheduled factory inspection and synthetic engine oil replacement at authorized BMW service.",
+      "cost": 14500,
+      "nextServiceDate": "2027-03-15T00:00:00.000Z",
+      "status": "COMPLETED"
+    },
+    {
+      "_id": "maint-102",
+      "vehicle": {
+        "_id": "demo-innova-crysta",
+        "brand": "Toyota",
+        "model": "Innova Crysta 2.4 VX Executive",
+        "year": 2024,
+        "category": "SUV",
+        "registrationNumber": "MH02EK4021",
+        "fuelType": "Diesel",
+        "transmission": "Automatic",
+        "seatingCapacity": 7,
+        "pricePerDay": 4800,
+        "location": "Mumbai Airport Terminal 2",
+        "images": [
+          "/images/innova-crysta.jpg"
+        ],
+        "features": [
+          "Captain Executive Seats",
+          "Automatic Climate Control",
+          "Ultra-Reliable D-4D Engine",
+          "Rear Entertainment Screen",
+          "Ambient Lighting"
+        ],
+        "status": "AVAILABLE",
+        "mileage": 18500
+      },
+      "serviceDate": "2026-10-02T00:00:00.000Z",
+      "mileage": 18500,
+      "serviceType": "Brake Pad Replacement & Fluid Flush",
+      "description": "Front and rear ceramic brake pads replaced, brake fluid completely flushed.",
+      "cost": 8400,
+      "nextServiceDate": "2027-04-01T00:00:00.000Z",
+      "status": "COMPLETED"
+    }
+  ],
+  "vehicles": [
+    {
+      "_id": "demo-bmw-330i",
+      "brand": "BMW",
+      "model": "3 Series Gran Limousine M-Sport",
+      "year": 2024,
+      "category": "Luxury",
+      "registrationNumber": "KA01ML3301",
+      "fuelType": "Petrol",
+      "transmission": "Automatic",
+      "seatingCapacity": 5,
+      "pricePerDay": 6800,
+      "location": "Bengaluru Airport Terminal 1",
+      "images": [
+        "/images/bmw-3series.jpg"
+      ],
+      "features": [
+        "Harman Kardon Audio",
+        "Panoramic Sunroof",
+        "Twin-Turbo 258 BHP",
+        "Wireless Apple CarPlay",
+        "Heated Sport Seats"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 8200
+    },
+    {
+      "_id": "demo-innova-crysta",
+      "brand": "Toyota",
+      "model": "Innova Crysta 2.4 VX Executive",
+      "year": 2024,
+      "category": "SUV",
+      "registrationNumber": "MH02EK4021",
+      "fuelType": "Diesel",
+      "transmission": "Automatic",
+      "seatingCapacity": 7,
+      "pricePerDay": 4800,
+      "location": "Mumbai Airport Terminal 2",
+      "images": [
+        "/images/innova-crysta.jpg"
+      ],
+      "features": [
+        "Captain Executive Seats",
+        "Automatic Climate Control",
+        "Ultra-Reliable D-4D Engine",
+        "Rear Entertainment Screen",
+        "Ambient Lighting"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 18500
+    },
+    {
+      "_id": "demo-xuv700",
+      "brand": "Mahindra",
+      "model": "XUV700 AX7 Luxury Pack",
+      "year": 2024,
+      "category": "SUV",
+      "registrationNumber": "MH12RN5512",
+      "fuelType": "Diesel",
+      "transmission": "Automatic",
+      "seatingCapacity": 7,
+      "pricePerDay": 4600,
+      "location": "Bengaluru Indiranagar",
+      "images": [
+        "/images/mahindra-xuv700.jpg"
+      ],
+      "features": [
+        "Panoramic Skyroof",
+        "Sony 12-Speaker 3D Audio",
+        "ADAS Level 2 Autonomous Safety",
+        "Twin HD Cockpit Displays",
+        "Flush Smart Door Handles"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 9400
+    },
+    {
+      "_id": "demo-tata-nexon-ev",
+      "brand": "Tata",
+      "model": "Nexon EV Empowered Plus",
+      "year": 2024,
+      "category": "Electric",
+      "registrationNumber": "DL08EV2241",
+      "fuelType": "Electric",
+      "transmission": "Automatic",
+      "seatingCapacity": 5,
+      "pricePerDay": 3600,
+      "location": "Delhi Connaught Place",
+      "images": [
+        "/images/tata-nexon-ev.jpg"
+      ],
+      "features": [
+        "465km Long Range",
+        "Vehicle-to-Load V2L Charging",
+        "Ventilated Leatherette Seats",
+        "Harman Cinematic Audio",
+        "Fast DC Charging"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 6300
+    },
+    {
+      "_id": "demo-honda-city",
+      "brand": "Honda",
+      "model": "City ZX 1.5 i-VTEC",
+      "year": 2024,
+      "category": "Sedan",
+      "registrationNumber": "DL01CA9124",
+      "fuelType": "Petrol",
+      "transmission": "Automatic",
+      "seatingCapacity": 5,
+      "pricePerDay": 3200,
+      "location": "Delhi NCR CyberCity",
+      "images": [
+        "/images/honda-city.jpg"
+      ],
+      "features": [
+        "Electric One-Touch Sunroof",
+        "LaneWatch Camera",
+        "Full LED Array Headlamps",
+        "Plush Leather Interior",
+        "Cruise Control"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 14300
+    },
+    {
+      "_id": "demo-maruti-swift",
+      "brand": "Maruti Suzuki",
+      "model": "Swift ZXi Plus Dual Tone",
+      "year": 2024,
+      "category": "Hatchback",
+      "registrationNumber": "KA05GT9901",
+      "fuelType": "Petrol",
+      "transmission": "Automatic",
+      "seatingCapacity": 5,
+      "pricePerDay": 2200,
+      "location": "Bengaluru Koramangala",
+      "images": [
+        "/images/maruti-swift.jpg"
+      ],
+      "features": [
+        "SmartPlay Pro+ 9-Inch Touchscreen",
+        "Cruise Control",
+        "Wireless Phone Charger",
+        "Arkams Premium Surround",
+        "High Fuel Efficiency 23 km/l"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 8400
+    },
+    {
+      "_id": "demo-thar-roxx",
+      "brand": "Mahindra",
+      "model": "Thar ROXX 4x4 AX7L",
+      "year": 2024,
+      "category": "SUV",
+      "registrationNumber": "TN09AZ4401",
+      "fuelType": "Diesel",
+      "transmission": "Automatic",
+      "seatingCapacity": 5,
+      "pricePerDay": 4800,
+      "location": "Chennai Airport (MAA)",
+      "images": [
+        "/images/mahindra-thar.jpg"
+      ],
+      "features": [
+        "Panoramic Sunroof",
+        "Harman Kardon 9-Speaker Audio",
+        "Level 2 ADAS",
+        "Electronic Locking Differential",
+        "Ventilated Front Seats"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 5200
+    },
+    {
+      "_id": "demo-innova-hycross",
+      "brand": "Toyota",
+      "model": "Innova Hycross ZX(O) Hybrid",
+      "year": 2024,
+      "category": "SUV",
+      "registrationNumber": "TN02BK7711",
+      "fuelType": "Hybrid",
+      "transmission": "Automatic",
+      "seatingCapacity": 7,
+      "pricePerDay": 5400,
+      "location": "Chennai OMR IT Corridor",
+      "images": [
+        "/images/innova-hycross.jpg"
+      ],
+      "features": [
+        "Ottoman Executive Captain Seats",
+        "Dual Zone Climate Control",
+        "Panoramic Sunroof",
+        "Toyota Safety Sense ADAS",
+        "21 km/l Fuel Efficiency"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 8600
+    },
+    {
+      "_id": "demo-bmw-chennai",
+      "brand": "BMW",
+      "model": "3 Series Gran Limousine 330Li",
+      "year": 2024,
+      "category": "Luxury",
+      "registrationNumber": "TN07CL0033",
+      "fuelType": "Petrol",
+      "transmission": "Automatic",
+      "seatingCapacity": 5,
+      "pricePerDay": 7800,
+      "location": "Chennai T. Nagar",
+      "images": [
+        "/images/bmw-3series.jpg"
+      ],
+      "features": [
+        "Harman Kardon Audio",
+        "Panoramic Sunroof",
+        "M-Sport Aerodynamic Package",
+        "Curved Display Cockpit",
+        "Adaptive LED Headlights"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 6400
+    },
+    {
+      "_id": "demo-verna-chennai",
+      "brand": "Hyundai",
+      "model": "Verna SX (O) 1.5 Turbo DCT",
+      "year": 2024,
+      "category": "Sedan",
+      "registrationNumber": "TN10BY5522",
+      "fuelType": "Petrol",
+      "transmission": "Automatic",
+      "seatingCapacity": 5,
+      "pricePerDay": 3200,
+      "location": "Chennai Anna Nagar",
+      "images": [
+        "/images/hyundai-verna.jpg"
+      ],
+      "features": [
+        "160 PS Turbo GDi",
+        "Bose 8-Speaker Sound",
+        "Ventilated & Heated Seats",
+        "Horizon LED Lightbar",
+        "Paddle Shifters"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 11200
+    },
+    {
+      "_id": "demo-force-urbania",
+      "brand": "Force",
+      "model": "Urbania Luxury 13-Seater",
+      "year": 2024,
+      "category": "Van",
+      "registrationNumber": "DL04VA8810",
+      "fuelType": "Diesel",
+      "transmission": "Manual",
+      "seatingCapacity": 13,
+      "pricePerDay": 7500,
+      "location": "Delhi Airport Aerocity",
+      "images": [
+        "/images/force-urbania.jpg"
+      ],
+      "features": [
+        "Reclining Luxury Seats",
+        "Individual AC Vents",
+        "Dual Airbags",
+        "High Roof Stand-up Cabin",
+        "USB Ports"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 41200
+    },
+    {
+      "_id": "demo-royal-enfield",
+      "brand": "Royal Enfield",
+      "model": "Himalayan 450 Summit",
+      "year": 2024,
+      "category": "Bike",
+      "registrationNumber": "TN07BK6741",
+      "fuelType": "Petrol",
+      "transmission": "Manual",
+      "seatingCapacity": 2,
+      "pricePerDay": 1600,
+      "location": "Chennai OMR",
+      "images": [
+        "/images/royal-enfield.jpg"
+      ],
+      "features": [
+        "TFT Tripper Navigation",
+        "Ride-by-wire",
+        "Switchable ABS",
+        "Tubeless Spoke Wheels",
+        "Luggage Mounts"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 6500
+    },
+    {
+      "_id": "demo-toyota-hyryder",
+      "brand": "Toyota",
+      "model": "Urban Cruiser Hyryder V Hybrid",
+      "year": 2024,
+      "category": "SUV",
+      "registrationNumber": "MH04HY1122",
+      "fuelType": "Hybrid",
+      "transmission": "Automatic",
+      "seatingCapacity": 5,
+      "pricePerDay": 3300,
+      "location": "Mumbai Thane West",
+      "images": [
+        "/images/toyota-hyryder.jpg"
+      ],
+      "features": [
+        "Strong Hybrid EV Mode",
+        "Head-up Display",
+        "360 View Monitor",
+        "Ventilated Front Seats"
+      ],
+      "status": "AVAILABLE",
+      "mileage": 9800
+    }
+  ]
+}
