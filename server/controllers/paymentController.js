@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 const Booking = require('../models/Booking');
 const { razorpayInstance, verifyPaymentSignature } = require('../config/razorpay');
 const { mockVehicles, mockDashboardStats } = require('../utils/mockStore');
+const {
+  getAllBookings: getAllLiveBookings,
+  updateBookingPayment: updateLiveBookingPayment,
+} = require('../utils/liveStore');
 
 /**
  * @desc    Create Razorpay Order for a Booking
@@ -20,11 +24,20 @@ const createOrder = async (req, res, next) => {
     }
 
     if (mongoose.connection.readyState !== 1 || bookingId.startsWith('demo-') || bookingId.startsWith('bk-')) {
-      const mockBooking = (mockDashboardStats?.recentBookings || []).find((b) => b._id === bookingId) || {
+      const allLive = getAllLiveBookings();
+      const liveBooking = allLive.find((b) => b._id === bookingId);
+      const mockBooking = liveBooking || (mockDashboardStats?.recentBookings || []).find((b) => b._id === bookingId) || {
         _id: bookingId,
         totalAmount: 18500,
         vehicle: mockVehicles[0],
       };
+
+      if (mockBooking.paymentStatus === 'PAID') {
+        return res.status(400).json({
+          success: false,
+          message: 'This booking has already been paid for and confirmed',
+        });
+      }
 
       const amountInPaise = Math.round((mockBooking.totalAmount || 18500) * 100);
       return res.status(200).json({
@@ -148,8 +161,35 @@ const verifyPayment = async (req, res, next) => {
     }
 
     if (mongoose.connection.readyState !== 1 || bookingId.startsWith('demo-') || bookingId.startsWith('bk-')) {
+      const allLive = getAllLiveBookings();
+      const liveB = allLive.find((b) => b._id === bookingId);
+      if (liveB) {
+        if (liveB.paymentStatus === 'PAID') {
+          return res.status(400).json({
+            success: false,
+            message: 'This booking has already been verified and paid',
+          });
+        }
+        const updated = updateLiveBookingPayment(bookingId, {
+          razorpay_order_id,
+          razorpay_payment_id,
+          paidAt: new Date().toISOString(),
+        });
+        return res.status(200).json({
+          success: true,
+          message: 'Payment verified successfully and booking confirmed',
+          booking: updated,
+        });
+      }
+
       const target = (mockDashboardStats?.recentBookings || []).find((b) => b._id === bookingId);
       if (target) {
+        if (target.paymentStatus === 'PAID') {
+          return res.status(400).json({
+            success: false,
+            message: 'This booking has already been verified and paid',
+          });
+        }
         target.paymentStatus = 'PAID';
         target.status = 'CONFIRMED';
         target.razorpayPaymentId = razorpay_payment_id || `pay_sim_${Date.now()}`;
@@ -182,6 +222,14 @@ const verifyPayment = async (req, res, next) => {
       return res.status(403).json({
         success: false,
         message: 'You are not authorized to verify this payment',
+      });
+    }
+
+    // Prevent duplicate payment verification
+    if (booking.paymentStatus === 'PAID') {
+      return res.status(400).json({
+        success: false,
+        message: 'This booking has already been verified and paid',
       });
     }
 

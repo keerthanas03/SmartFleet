@@ -301,16 +301,8 @@ const getVerificationQueue = async (req, res, next) => {
             email: 'pooja@deloitte.com',
             phone: '+919876500113',
             verificationStatus: 'pending',
-            drivingLicense: {
-              licenseNumber: 'KA-01-20220019283',
-              verified: false,
-              documentUrl: '/images/hero-luxury-sedan.jpg',
-            },
-            idProof: {
-              documentType: 'Passport',
-              documentNumber: 'Z8192819',
-              verified: false,
-            },
+            drivingLicense: '/images/bmw-3series.jpg',
+            idProof: '/images/bmw-3series.jpg',
             createdAt: new Date('2026-10-12'),
           },
           {
@@ -319,16 +311,8 @@ const getVerificationQueue = async (req, res, next) => {
             email: 'vikram@startup.io',
             phone: '+919876500114',
             verificationStatus: 'approved',
-            drivingLicense: {
-              licenseNumber: 'MH-02-20210088122',
-              verified: true,
-              documentUrl: '/images/hero-luxury-sedan.jpg',
-            },
-            idProof: {
-              documentType: 'Aadhaar',
-              documentNumber: 'XXXX-XXXX-9128',
-              verified: true,
-            },
+            drivingLicense: '/images/innova-crysta.jpg',
+            idProof: '/images/innova-crysta.jpg',
             createdAt: new Date('2026-10-10'),
           },
         ],

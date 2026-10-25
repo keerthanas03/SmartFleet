@@ -6,41 +6,39 @@ try {
   dns.setServers(['8.8.8.8', '1.1.1.1']);
 } catch (e) {}
 
-// Disable operation buffering so queries never hang or time out if offline
-mongoose.set('bufferCommands', false);
-
-let retryTimer = null;
-
+/**
+ * Connect to MongoDB Atlas using Mongoose
+ * Reads MONGO_URI from process.env and throws if unavailable or connection fails
+ */
 const connectDB = async () => {
+  const mongoUri = process.env.MONGO_URI;
+
+  if (!mongoUri) {
+    const errorMsg = 'MONGO_URI is not defined in environment variables. Please check your .env file.';
+    console.error(`[SmartFleet DB] MongoDB Connection Error: ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
+
   try {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/smartfleet';
     const conn = await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 4000,
+      serverSelectionTimeoutMS: 5000,
     });
     console.log(`[SmartFleet DB] MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`);
-    if (retryTimer) {
-      clearInterval(retryTimer);
-      retryTimer = null;
-    }
+    return conn;
   } catch (error) {
-    console.warn(`[SmartFleet DB] MongoDB Offline / Atlas IP Whitelist needed: ${error.message}`);
-    console.log(`[SmartFleet DB] Operating in Resilient Offline / Demo Mode with instant authentication.`);
-
-    // Auto-retry connection every 20 seconds in the background
-    if (!retryTimer) {
-      retryTimer = setInterval(async () => {
-        try {
-          const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/smartfleet';
-          const conn = await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 4000 });
-          console.log(`[SmartFleet DB] MongoDB Connected (Auto-reconnected): ${conn.connection.host}/${conn.connection.name}`);
-          clearInterval(retryTimer);
-          retryTimer = null;
-        } catch (e) {
-          // Keep waiting for IP whitelist
-        }
-      }, 20000);
-    }
+    console.error(`[SmartFleet DB] MongoDB Connection Error: ${error.message}`);
+    throw error;
   }
 };
 
+// Monitor runtime database connection events
+mongoose.connection.on('error', (err) => {
+  console.error(`[SmartFleet DB] MongoDB runtime error: ${err.message}`);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('[SmartFleet DB] MongoDB disconnected');
+});
+
 module.exports = connectDB;
+

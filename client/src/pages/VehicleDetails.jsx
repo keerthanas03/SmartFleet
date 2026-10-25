@@ -139,14 +139,6 @@ const VehicleDetails = () => {
       return;
     }
 
-    if (id && id.startsWith('demo-')) {
-      setAvailabilityMessage({
-        available: true,
-        text: 'Vehicle is confirmed available for selected dates! (Instant Verified)',
-      });
-      return;
-    }
-
     try {
       setAvailabilityMessage(null);
       const res = await api.get('/bookings/availability', {
@@ -183,36 +175,6 @@ const VehicleDetails = () => {
 
     if (!pickupLocation || !returnLocation) {
       setError('Please choose your pickup and return locations');
-      return;
-    }
-
-    if (id && id.startsWith('demo-')) {
-      // Simulate booking voucher for demo preview
-      const demoId = `demo-booking-${Date.now()}`;
-      const demoBooking = {
-        _id: demoId,
-        bookingReference: `SF-2026-${Math.floor(100000 + Math.random() * 900000)}`,
-        vehicle,
-        pickupDate,
-        returnDate,
-        totalDays: priceCalculations.days,
-        basePrice: priceCalculations.baseAmount,
-        taxAmount: priceCalculations.taxAmount,
-        insuranceAmount: priceCalculations.insuranceAmount,
-        totalAmount: priceCalculations.totalAmount,
-        status: 'PENDING',
-        paymentStatus: 'PENDING',
-        pickupLocation,
-        returnLocation,
-      };
-
-      try {
-        localStorage.setItem('smartfleet_last_booking', JSON.stringify(demoBooking));
-      } catch (e) {}
-
-      navigate(`/payment?bookingId=${demoId}`, {
-        state: { booking: demoBooking },
-      });
       return;
     }
 

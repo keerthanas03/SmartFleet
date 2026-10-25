@@ -16,20 +16,21 @@ const protect = async (req, res, next) => {
 
       const userId = decoded.userId || decoded.id;
 
+      const { findUserById: findLiveUserById } = require('../utils/liveStore');
       const { findMockUserById } = require('../utils/mockStore');
 
       // Handle demo / offline users immediately
       if (userId && (userId.startsWith('demo-') || mongoose.connection.readyState !== 1)) {
-        const mockUser = findMockUserById(userId);
+        const liveOrMock = findLiveUserById(userId) || findMockUserById(userId);
         req.user = {
           userId,
           id: userId,
-          name: mockUser ? mockUser.name : (decoded.role === 'admin' ? (process.env.ADMIN_NAME || 'Fleet Administrator') : 'Demo Test Driver'),
-          email: mockUser ? mockUser.email : (decoded.role === 'admin' ? (process.env.ADMIN_EMAIL || 'admin@smartfleet.com') : 'customer@smartfleet.com'),
-          phone: mockUser ? mockUser.phone : '+919876543210',
-          role: mockUser ? mockUser.role : (decoded.role || 'customer'),
-          verificationStatus: mockUser ? (mockUser.verificationStatus || 'approved') : 'approved',
-          address: mockUser ? mockUser.address : '',
+          name: liveOrMock ? liveOrMock.name : (decoded.role === 'admin' ? (process.env.ADMIN_NAME || 'Fleet Administrator') : 'Customer'),
+          email: liveOrMock ? liveOrMock.email : (decoded.role === 'admin' ? (process.env.ADMIN_EMAIL || 'admin@smartfleet.com') : (decoded.email || '')),
+          phone: liveOrMock ? liveOrMock.phone : '+919876543210',
+          role: liveOrMock ? liveOrMock.role : (decoded.role || 'customer'),
+          verificationStatus: liveOrMock ? (liveOrMock.verificationStatus || 'approved') : 'approved',
+          address: liveOrMock ? (liveOrMock.address || '') : '',
         };
         return next();
       }

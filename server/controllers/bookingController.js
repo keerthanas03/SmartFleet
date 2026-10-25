@@ -2,24 +2,51 @@ const mongoose = require('mongoose');
 const Booking = require('../models/Booking');
 const Vehicle = require('../models/Vehicle');
 const { mockVehicles, mockDashboardStats } = require('../utils/mockStore');
+const {
+  createBooking: createLiveBooking,
+  getCustomerBookings: getLiveCustomerBookings,
+  getAllBookings: getAllLiveBookings,
+  updateBookingStatus: updateLiveBookingStatus,
+  cancelBooking: cancelLiveBooking,
+  getVehicles: getLiveVehicles,
+} = require('../utils/liveStore');
 
 /**
  * Helper to check date overlap
+ * Overlapping condition: existingPickup < requestedReturn AND existingReturn > requestedPickup
  */
 const checkOverlap = async (vehicleId, pickupDate, returnDate, excludeBookingId = null) => {
-  if (mongoose.connection.readyState !== 1) return false;
-  const query = {
-    vehicle: vehicleId,
-    status: { $in: ['PENDING', 'CONFIRMED', 'ACTIVE'] },
-    pickupDate: { $lt: new Date(returnDate) },
-    returnDate: { $gt: new Date(pickupDate) },
-  };
+  const reqStart = new Date(pickupDate);
+  const reqEnd = new Date(returnDate);
 
-  if (excludeBookingId) {
-    query._id = { $ne: excludeBookingId };
+  if (mongoose.connection.readyState === 1) {
+    const query = {
+      vehicle: vehicleId,
+      status: { $in: ['PENDING', 'CONFIRMED', 'ACTIVE'] },
+      pickupDate: { $lt: reqEnd },
+      returnDate: { $gt: reqStart },
+    };
+
+    if (excludeBookingId) {
+      query._id = { $ne: excludeBookingId };
+    }
+
+    const conflict = await Booking.findOne(query);
+    return !!conflict;
   }
 
-  const conflict = await Booking.findOne(query);
+  // Fallback / resilient store overlap check
+  const allLive = getAllLiveBookings();
+  const conflict = allLive.find((b) => {
+    if (excludeBookingId && b._id === excludeBookingId) return false;
+    const bVehId = b.vehicle?._id || b.vehicle;
+    if (bVehId !== vehicleId) return false;
+    if (!['PENDING', 'CONFIRMED', 'ACTIVE'].includes(b.status)) return false;
+    const bStart = new Date(b.pickupDate);
+    const bEnd = new Date(b.returnDate);
+    return bStart < reqEnd && bEnd > reqStart;
+  });
+
   return !!conflict;
 };
 
@@ -39,44 +66,6 @@ const createBooking = async (req, res, next) => {
       });
     }
 
-    if (mongoose.connection.readyState !== 1) {
-      const mockV = mockVehicles.find((v) => v._id === vehicleId) || mockVehicles[0];
-      const start = new Date(pickupDate);
-      const end = new Date(returnDate);
-      const days = Math.max(1, Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)));
-      const base = days * mockV.pricePerDay;
-      const tax = Math.round(base * 0.18);
-      const total = base + tax + 500;
-
-      const newBooking = {
-        _id: `demo-bk-${Date.now()}`,
-        bookingReference: `SF-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-        customer: req.user?.userId || 'u-demo-1',
-        vehicle: mockV,
-        pickupDate,
-        returnDate,
-        numberOfDays: days,
-        baseAmount: base,
-        taxAmount: tax,
-        insuranceAmount: 500,
-        totalAmount: total,
-        status: 'PENDING',
-        paymentStatus: 'PENDING',
-        pickupLocation,
-        returnLocation,
-      };
-
-      if (mockDashboardStats && mockDashboardStats.recentBookings) {
-        mockDashboardStats.recentBookings.unshift(newBooking);
-      }
-
-      return res.status(201).json({
-        success: true,
-        message: 'Booking created successfully (Demo Mode)',
-        data: newBooking,
-      });
-    }
-
     const start = new Date(pickupDate);
     const end = new Date(returnDate);
 
@@ -87,10 +76,66 @@ const createBooking = async (req, res, next) => {
       });
     }
 
+    // Reject pickup dates in the past (allowing today)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const pickupDay = new Date(start);
+    pickupDay.setHours(0, 0, 0, 0);
+    if (pickupDay < today) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pickup date cannot be in the past',
+      });
+    }
+
+    // Return date must be strictly after pickup date
     if (end <= start) {
       return res.status(400).json({
         success: false,
         message: 'Return date must be strictly after pickup date',
+      });
+    }
+
+    // Calculate rental duration in calendar days (min 1)
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const numberOfDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+    if (mongoose.connection.readyState !== 1) {
+      const allVehs = getLiveVehicles() || mockVehicles;
+      const vehicle = allVehs.find((v) => v._id === vehicleId) || mockVehicles[0];
+
+      if (vehicle.status === 'MAINTENANCE' || vehicle.status === 'INACTIVE') {
+        return res.status(400).json({
+          success: false,
+          message: `Vehicle is currently unavailable for booking (Status: ${vehicle.status})`,
+        });
+      }
+
+      // Check conflict
+      const hasConflict = await checkOverlap(vehicle._id, start, end);
+      if (hasConflict) {
+        return res.status(400).json({
+          success: false,
+          message: 'This vehicle already has a confirmed or pending booking during the selected dates',
+        });
+      }
+
+      const newBooking = createLiveBooking({
+        vehicleId: vehicle._id,
+        pickupDate: start.toISOString(),
+        returnDate: end.toISOString(),
+        pickupLocation: pickupLocation.trim(),
+        returnLocation: returnLocation.trim(),
+        customerId: req.user?.userId || req.user?.id || 'demo-driver-id',
+        customerEmail: req.user?.email || '',
+        customerName: req.user?.name || 'Customer',
+        customerPhone: req.user?.phone || '',
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Booking created successfully. Please proceed with payment.',
+        data: newBooking,
       });
     }
 
@@ -118,11 +163,7 @@ const createBooking = async (req, res, next) => {
       });
     }
 
-    // Calculate days
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const numberOfDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-
-    // Calculate amounts
+    // Calculate amounts on server
     const baseAmount = numberOfDays * vehicle.pricePerDay;
     const taxAmount = Math.round(baseAmount * 0.18); // 18% tax
     const insuranceAmount = 500; // Flat INR 500
@@ -168,6 +209,7 @@ const checkAvailability = async (req, res, next) => {
     if (!vehicleId || !pickupDate || !returnDate) {
       return res.status(400).json({
         success: false,
+        available: false,
         message: 'Please provide vehicleId, pickupDate, and returnDate',
       });
     }
@@ -183,11 +225,45 @@ const checkAvailability = async (req, res, next) => {
       });
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const pickupDay = new Date(start);
+    pickupDay.setHours(0, 0, 0, 0);
+    if (pickupDay < today) {
+      return res.status(400).json({
+        success: false,
+        available: false,
+        message: 'Pickup date cannot be in the past',
+      });
+    }
+
     if (mongoose.connection.readyState !== 1) {
+      const allVehs = getLiveVehicles() || mockVehicles;
+      const vehicle = allVehs.find((v) => v._id === vehicleId) || mockVehicles.find((v) => v._id === vehicleId);
+
+      if (!vehicle) {
+        return res.status(404).json({
+          success: false,
+          available: false,
+          message: 'Vehicle not found',
+        });
+      }
+
+      if (vehicle.status === 'MAINTENANCE' || vehicle.status === 'INACTIVE') {
+        return res.status(200).json({
+          success: true,
+          available: false,
+          message: `Vehicle is currently not available due to ${vehicle.status.toLowerCase()} status`,
+        });
+      }
+
+      const hasConflict = await checkOverlap(vehicleId, start, end);
       return res.status(200).json({
         success: true,
-        available: true,
-        message: 'Vehicle is available for the selected dates',
+        available: !hasConflict,
+        message: hasConflict
+          ? 'Vehicle is already booked for the selected dates'
+          : 'Vehicle is available for the selected dates',
       });
     }
 
@@ -228,17 +304,18 @@ const checkAvailability = async (req, res, next) => {
 };
 
 /**
- * @desc    Get logged-in customer's bookings
+ * @desc    Get logged-in customer's bookings (Isolated to user)
  * @route   GET /api/bookings/my
  * @access  Private/Customer
  */
 const getMyBookings = async (req, res, next) => {
   try {
     if (mongoose.connection.readyState !== 1) {
+      const userBookings = getLiveCustomerBookings(req.user.userId || req.user.id, req.user.email);
       return res.status(200).json({
         success: true,
-        count: mockDashboardStats.recentBookings.length,
-        data: mockDashboardStats.recentBookings,
+        count: userBookings.length,
+        data: userBookings,
       });
     }
 
@@ -264,10 +341,11 @@ const getMyBookings = async (req, res, next) => {
 const getAllBookings = async (req, res, next) => {
   try {
     if (mongoose.connection.readyState !== 1) {
+      const allList = getAllLiveBookings();
       return res.status(200).json({
         success: true,
-        count: mockDashboardStats.recentBookings.length,
-        data: mockDashboardStats.recentBookings,
+        count: allList.length,
+        data: allList,
       });
     }
 
@@ -304,6 +382,14 @@ const updateBookingStatus = async (req, res, next) => {
     }
 
     if (mongoose.connection.readyState !== 1 || req.params.id.startsWith('demo-') || req.params.id.startsWith('bk-')) {
+      const updated = updateLiveBookingStatus(req.params.id, status);
+      if (updated) {
+        return res.status(200).json({
+          success: true,
+          message: `Booking status updated to ${status}`,
+          data: updated,
+        });
+      }
       const mockB = (mockDashboardStats?.recentBookings || []).find((b) => b._id === req.params.id);
       if (mockB) {
         mockB.status = status;
@@ -379,7 +465,31 @@ const cancelBooking = async (req, res, next) => {
   try {
     const { reason } = req.body;
     if (mongoose.connection.readyState !== 1 || req.params.id.startsWith('demo-') || req.params.id.startsWith('bk-')) {
-      const mockB = (mockDashboardStats?.recentBookings || []).find((b) => b._id === req.params.id);
+      const allLive = getAllLiveBookings();
+      const b = allLive.find((item) => item._id === req.params.id);
+      if (b) {
+        const userId = req.user.userId || req.user.id;
+        if (b.customer !== userId && req.user.role !== 'admin' && b.customerEmail !== req.user.email) {
+          return res.status(403).json({ success: false, message: 'Not authorized to cancel this booking' });
+        }
+        if (b.status === 'COMPLETED') {
+          return res.status(400).json({ success: false, message: 'Cannot cancel an already completed booking' });
+        }
+        if (b.status === 'ACTIVE') {
+          return res.status(400).json({ success: false, message: 'Cannot cancel an active rental trip in progress' });
+        }
+        if (b.status === 'CANCELLED') {
+          return res.status(400).json({ success: false, message: 'This booking is already cancelled' });
+        }
+        const cancelled = cancelLiveBooking(req.params.id, reason);
+        return res.status(200).json({
+          success: true,
+          message: 'Booking cancelled successfully',
+          data: cancelled || b,
+        });
+      }
+
+      const mockB = (mockDashboardStats?.recentBookings || []).find((item) => item._id === req.params.id);
       if (mockB) {
         mockB.status = 'CANCELLED';
         mockB.cancellationReason = reason || 'Cancelled by customer';

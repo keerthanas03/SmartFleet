@@ -173,7 +173,10 @@ const AdminVerification = () => {
                   <td>
                     {u.drivingLicense ? (
                       <button
-                        onClick={() => setPreviewDoc({ title: `${u.name} - Driving License`, url: u.drivingLicense })}
+                        onClick={() => {
+                          const docUrl = typeof u.drivingLicense === 'object' ? (u.drivingLicense?.documentUrl || '') : u.drivingLicense;
+                          setPreviewDoc({ title: `${u.name} - Driving License`, url: docUrl });
+                        }}
                         className="btn btn-secondary btn-sm"
                       >
                         👁️ View License
@@ -185,7 +188,10 @@ const AdminVerification = () => {
                   <td>
                     {u.idProof ? (
                       <button
-                        onClick={() => setPreviewDoc({ title: `${u.name} - ID Proof`, url: u.idProof })}
+                        onClick={() => {
+                          const docUrl = typeof u.idProof === 'object' ? (u.idProof?.documentUrl || '') : u.idProof;
+                          setPreviewDoc({ title: `${u.name} - ID Proof`, url: docUrl });
+                        }}
                         className="btn btn-secondary btn-sm"
                       >
                         👁️ View ID

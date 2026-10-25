@@ -135,20 +135,6 @@ const Payment = () => {
       setPaying(true);
       setError('');
 
-      // If demo booking, simulate instant completion
-      if (booking._id && booking._id.startsWith('demo-')) {
-        setTimeout(() => {
-          const confirmed = { ...booking, paymentStatus: 'PAID', status: 'CONFIRMED' };
-          setBooking(confirmed);
-          setPaymentSuccess(true);
-          setPaying(false);
-          try {
-            localStorage.setItem('smartfleet_last_booking', JSON.stringify(confirmed));
-          } catch (e) {}
-        }, 700);
-        return;
-      }
-
       // 1. Create order on backend
       const orderRes = await api.post('/payments/create-order', { bookingId: booking._id });
       const { orderId, amount, currency, key, isRealRazorpayOrder } = orderRes.data;
@@ -222,19 +208,6 @@ const Payment = () => {
     try {
       setPaying(true);
       setError('');
-
-      if (booking._id && booking._id.startsWith('demo-')) {
-        setTimeout(() => {
-          const confirmed = { ...booking, paymentStatus: 'PAID', status: 'CONFIRMED' };
-          setBooking(confirmed);
-          setPaymentSuccess(true);
-          setPaying(false);
-          try {
-            localStorage.setItem('smartfleet_last_booking', JSON.stringify(confirmed));
-          } catch (e) {}
-        }, 500);
-        return;
-      }
 
       await api.post('/payments/verify', {
         bookingId: booking._id,

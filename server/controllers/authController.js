@@ -243,7 +243,11 @@ const login = async (req, res, next) => {
         });
       }
 
-      if (liveUser.password === password) {
+      const isMatch = liveUser.password && liveUser.password.startsWith('$2')
+        ? bcrypt.compareSync(password, liveUser.password)
+        : liveUser.password === password;
+
+      if (isMatch) {
         const token = generateToken(liveUser._id, liveUser.role || 'customer');
         return res.status(200).json({
           success: true,

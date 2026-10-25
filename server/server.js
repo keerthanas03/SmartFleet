@@ -18,16 +18,45 @@ const reportRoutes = require('./routes/reportRoutes');
 // Import error middleware
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
-// Initialize MongoDB connection
-connectDB();
-
 const app = express();
 
-// Middleware
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+// CORS Configuration: Allow local Vite dev servers (5173, 5174, etc.) and configured CLIENT_URL
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
+  'http://localhost:5175',
+  'http://127.0.0.1:5175',
+];
+
+if (process.env.CLIENT_URL && !allowedOrigins.includes(process.env.CLIENT_URL)) {
+  allowedOrigins.push(process.env.CLIENT_URL);
+}
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser requests (e.g. mobile apps, curl, Postman, server-to-server) with no origin header
+    if (!origin) return callback(null, true);
+
+    const isAllowed =
+      allowedOrigins.includes(origin) ||
+      /^http:\/\/(localhost|127\.0\.0\.1):(517[3-9]|3000)$/.test(origin);
+
+    if (isAllowed) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  optionsSuccessStatus: 200,
+};
+
+// Register CORS middleware and OPTIONS preflight handler BEFORE all API routes
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -37,6 +66,7 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'online',
     service: 'SmartFleet API Server',
+    database: 'connected',
     timestamp: new Date().toISOString(),
   });
 });
@@ -59,10 +89,37 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
-  console.log(`[SmartFleet Server] Running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-  console.log(`[SmartFleet Server] Access API at http://localhost:${PORT}/api`);
-});
+// Start Express server ONLY after MongoDB connection succeeds
+const startServer = async () => {
+  try {
+    // 1. Await MongoDB Atlas connection
+    await connectDB();
+
+    // 2. Start Express server only after database connection succeeds
+    const server = app.listen(PORT, () => {
+      console.log(`[SmartFleet Server] Running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+      console.log(`[SmartFleet Server] Access API at http://localhost:${PORT}/api`);
+    });
+
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`[SmartFleet Server] Port ${PORT} is already in use by another running process.`);
+        console.error(`[SmartFleet Server] Tip: Terminate the existing process or set PORT=<other_port> in your .env file.`);
+      } else {
+        console.error(`[SmartFleet Server] Server listening error: ${err.message}`);
+      }
+      process.exit(1);
+    });
+
+    return server;
+  } catch (error) {
+    console.error(`[SmartFleet Server] Server startup aborted: Failed to connect to MongoDB Atlas.`);
+    console.error(`[SmartFleet Server] Error details: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {

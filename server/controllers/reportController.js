@@ -1,6 +1,12 @@
+const mongoose = require('mongoose');
 const Booking = require('../models/Booking');
 const Vehicle = require('../models/Vehicle');
 const Maintenance = require('../models/Maintenance');
+const {
+  getAllBookings: getAllLiveBookings,
+  getVehicles: getLiveVehicles,
+  getMaintenances: getLiveMaintenances,
+} = require('../utils/liveStore');
 
 /**
  * Helper to escape CSV cell content
@@ -18,10 +24,18 @@ const escapeCsv = (val) => {
  */
 const exportBookingsCsv = async (req, res, next) => {
   try {
-    const bookings = await Booking.find()
-      .populate('customer', 'name email phone')
-      .populate('vehicle', 'brand model registrationNumber')
-      .sort({ createdAt: -1 });
+    let bookings = [];
+    if (mongoose.connection.readyState === 1) {
+      bookings = await Booking.find()
+        .populate('customer', 'name email phone')
+        .populate('vehicle', 'brand model registrationNumber')
+        .sort({ createdAt: -1 });
+    } else {
+      bookings = getAllLiveBookings().map((b) => ({
+        ...b,
+        customer: { name: b.customerName || 'Customer', email: b.customerEmail, phone: b.customerPhone },
+      }));
+    }
 
     const headers = [
       'Booking ID',
@@ -84,7 +98,12 @@ const exportBookingsCsv = async (req, res, next) => {
  */
 const exportVehiclesCsv = async (req, res, next) => {
   try {
-    const vehicles = await Vehicle.find().sort({ createdAt: -1 });
+    let vehicles = [];
+    if (mongoose.connection.readyState === 1) {
+      vehicles = await Vehicle.find().sort({ createdAt: -1 });
+    } else {
+      vehicles = getLiveVehicles();
+    }
 
     const headers = [
       'Vehicle ID',
@@ -137,9 +156,14 @@ const exportVehiclesCsv = async (req, res, next) => {
  */
 const exportMaintenanceCsv = async (req, res, next) => {
   try {
-    const records = await Maintenance.find()
-      .populate('vehicle', 'brand model registrationNumber')
-      .sort({ serviceDate: -1 });
+    let records = [];
+    if (mongoose.connection.readyState === 1) {
+      records = await Maintenance.find()
+        .populate('vehicle', 'brand model registrationNumber')
+        .sort({ serviceDate: -1 });
+    } else {
+      records = getLiveMaintenances();
+    }
 
     const headers = [
       'Maintenance ID',

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 const { mockVehicles } = require('./mockStore');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
@@ -156,9 +157,13 @@ const findUserById = (id) => {
 const registerUser = (userData) => {
   const cleanEmail = userData.email.toLowerCase().trim();
   const existing = findUserByEmail(cleanEmail);
+  const hashedPassword = userData.password
+    ? (userData.password.startsWith('$2') ? userData.password : bcrypt.hashSync(userData.password, 10))
+    : '';
+
   if (existing) {
     // Update existing user credentials/details
-    if (userData.password) existing.password = userData.password;
+    if (userData.password) existing.password = hashedPassword;
     if (userData.name) existing.name = userData.name.trim();
     if (userData.phone) existing.phone = userData.phone.trim();
     saveDb();
@@ -169,7 +174,7 @@ const registerUser = (userData) => {
     _id: `user-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
     name: userData.name.trim(),
     email: cleanEmail,
-    password: userData.password,
+    password: hashedPassword,
     phone: userData.phone ? userData.phone.trim() : '',
     role: userData.role || 'customer',
     verificationStatus: 'unverified',
