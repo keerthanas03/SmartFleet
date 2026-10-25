@@ -1,7 +1,21 @@
 import axios from 'axios';
 
+// Resolve backend API URL dynamically:
+// 1. Explicit environment variable VITE_API_URL if configured
+// 2. Production fallback to deployed Render backend when hosted on Vercel
+// 3. Localhost fallback for local development
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://smartfleet-g0ui.onrender.com/api';
+  }
+  return 'http://localhost:5000/api';
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
