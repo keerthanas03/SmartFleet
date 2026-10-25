@@ -20,7 +20,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
 
-// CORS Configuration: Allow local Vite dev servers (5173, 5174, etc.) and configured CLIENT_URL
+// CORS Configuration: Allow local Vite dev servers, deployed Vercel frontend, and configured CLIENT_URL
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
@@ -28,6 +28,7 @@ const allowedOrigins = [
   'http://127.0.0.1:5174',
   'http://localhost:5175',
   'http://127.0.0.1:5175',
+  'https://smart-fleet-nine.vercel.app',
 ];
 
 if (process.env.CLIENT_URL && !allowedOrigins.includes(process.env.CLIENT_URL)) {
@@ -41,7 +42,8 @@ const corsOptions = {
 
     const isAllowed =
       allowedOrigins.includes(origin) ||
-      /^http:\/\/(localhost|127\.0\.0\.1):(517[3-9]|3000)$/.test(origin);
+      /^http:\/\/(localhost|127\.0\.0\.1):(517[3-9]|3000)$/.test(origin) ||
+      /^https:\/\/.*\.vercel\.app$/.test(origin);
 
     if (isAllowed) {
       return callback(null, true);
